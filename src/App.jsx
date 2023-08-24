@@ -9,10 +9,10 @@ import tinycolor from "tinycolor2";
 let SUPER_SECRET_APIKEY;
 if (import.meta.env.MODE === "development") {
   console.log("devvvvvvvv");
-  SUPER_SECRET_APIKEY = "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";
+  SUPER_SECRET_APIKEY = "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";
 } else {
   console.log("PRODDDDD");
-  SUPER_SECRET_APIKEY = import.meta.env.SUPER_SECRET_APIKEY;
+  SUPER_SECRET_APIKEY = import.meta.env.VITE_SUPER_SECRET_APIKEY;
 }
 
 function App() {
