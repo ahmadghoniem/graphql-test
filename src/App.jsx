@@ -5,41 +5,16 @@ import { ReactComponent as Issue } from "./assets/issue.svg";
 import { ReactComponent as Repo } from "./assets/repo.svg";
 import { ReactComponent as Fork } from "./assets/fork.svg";
 import { ReactComponent as Contributors } from "./assets/contributors.svg";
+import tinycolor from "tinycolor2";
+let SUPER_SECRET_APIKEY;
+if (import.meta.env.MODE === "development") {
+  console.log("devvvvvvvv");
+  SUPER_SECRET_APIKEY = "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";
+} else {
+  console.log("PRODDDDD");
+  SUPER_SECRET_APIKEY = import.meta.env.SUPER_SECRET_APIKEY;
+}
 
-const hexToRgb = (hexColor) => {
-  let r, g, b;
-  // convert 3-digit hex to 6-digits.
-  if (hexColor.length === 3) {
-    hexColor =
-      hexColor[0] +
-      hexColor[0] +
-      hexColor[1] +
-      hexColor[1] +
-      hexColor[2] +
-      hexColor[2];
-  }
-  r = parseInt(hexColor.slice(0, 2), 16);
-  g = parseInt(hexColor.slice(2, 4), 16);
-  b = parseInt(hexColor.slice(4, 6), 16);
-  return `${r} ${g} ${b}`;
-};
-const invertRgb = (rgbColor) => {
-  let r, g, b, rgb;
-  rgb = rgbColor.split(" ");
-  r = rgb[0];
-  g = rgb[1];
-  b = rgb[2];
-  console.log(r * 0.299 + g * 0.587 + b * 0.114);
-  // https://stackoverflow.com/a/3943023/112731
-  // return r * 0.299 + g * 0.587 + b * 0.114 > 186
-  //   ? "000 000 000"
-  //   : "255 255 255";
-
-  r = 255 - rgbColor.slice(0, 2);
-  g = 255 - rgbColor.slice(2, 4);
-  b = 255 - rgbColor.slice(4, 6);
-  return `${r} ${g} ${b}`;
-};
 function App() {
   const [data, setData] = useState({
     repository: {
@@ -60,6 +35,14 @@ function App() {
       BackendLabel: { color: "", description: "" },
     },
   });
+  const toRGB = (color) =>
+    Object.values(tinycolor(`#${color}`).toRgb())
+      .slice(0, -1)
+      .join(" ");
+  const invertRgb = (color) =>
+    tinycolor(`#${color}`).getLuminance() > 0.179
+      ? "000 000 000"
+      : "255 255 255";
   useEffect(() => {
     const document = gql`
       query ($last: Int, $owner: String!, $repoName: String!) {
@@ -121,7 +104,7 @@ function App() {
     };
     const requestHeaders = {
       "Content-Type": "application/json",
-      Authorization: "bearer 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",
+      Authorization: `bearer ${SUPER_SECRET_APIKEY}`,
     };
     request({
       url,
@@ -166,45 +149,39 @@ function App() {
     .querySelector(":root")
     .style.setProperty(
       "--good-first-issue-label-color",
-      hexToRgb(goodFirstIssueIssueLabelColor),
+      toRGB(goodFirstIssueIssueLabelColor),
     );
   document
     .querySelector(":root")
     .style.setProperty(
       "--frontend-issue-label-color",
-      hexToRgb(FrontendIssueLabelColor),
+      toRGB(FrontendIssueLabelColor),
     );
   document
     .querySelector(":root")
     .style.setProperty(
       "--backend-issue-label-color",
-      hexToRgb(BackendIssueLabelColor),
+      toRGB(BackendIssueLabelColor),
     );
   document
     .querySelector(":root")
     .style.setProperty(
       "--microcontrollers-issue-label-color",
-      hexToRgb(MicrocontrollersIssueLabelColor),
+      toRGB(MicrocontrollersIssueLabelColor),
     );
   // for inverted colors
   document
     .querySelector(":root")
-    .style.setProperty(
-      "--gfx",
-      invertRgb(hexToRgb(goodFirstIssueIssueLabelColor)),
-    );
+    .style.setProperty("--gfx", invertRgb(goodFirstIssueIssueLabelColor));
   document
     .querySelector(":root")
-    .style.setProperty("--fex", invertRgb(hexToRgb(FrontendIssueLabelColor)));
+    .style.setProperty("--fex", invertRgb(FrontendIssueLabelColor));
   document
     .querySelector(":root")
-    .style.setProperty("--bex", invertRgb(hexToRgb(BackendIssueLabelColor)));
+    .style.setProperty("--bex", invertRgb(BackendIssueLabelColor));
   document
     .querySelector(":root")
-    .style.setProperty(
-      "--mcx",
-      invertRgb(hexToRgb(MicrocontrollersIssueLabelColor)),
-    );
+    .style.setProperty("--mcx", invertRgb(MicrocontrollersIssueLabelColor));
 
   return (
     <div className=" p-4">
