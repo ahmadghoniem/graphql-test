@@ -2,12 +2,15 @@
 /** @jsxImportSource @emotion/react */
 
 import { css } from "@emotion/react";
-import React from "react";
+import React, { Children, cloneElement } from "react";
 import chroma from "chroma-js";
 import { clamp, useCombinedRefs, useMousemove, cn } from "./utils.js";
 
 export const ColorPickerRoot = React.forwardRef(
-  ({ onChange, defaultValue = "#ff0000", className, ...props }, ref) => {
+  (
+    { onChange, defaultValue = "#ff0000", className, children, ...props },
+    ref,
+  ) => {
     const picker = useCombinedRefs(React.useRef(), ref);
     const palette = React.useRef();
     const hue = React.useRef();
@@ -142,110 +145,17 @@ export const ColorPickerRoot = React.forwardRef(
           background: var(--color-picker-background);
         `}
         {...props}
-      ></div>
+      >
+        {Children.map(children, (child, index) =>
+          cloneElement(child, {
+              ref={child.displayName}
+          }),
+        )}
+      </div>
     );
   },
 );
 ColorPickerRoot.displayName = "ColorPickerRoot";
-
-/* export const ColorPickerPanel = React.forwardRef(
-    ({className, ...props }, ref) => {
-               return <div
-                aria-label="panel"
-                className="mt-3 grid h-48 gap-3"
-                css={css`
-                  grid-template-columns: 1fr 50px 50px;
-                `}
-              >
-                <div aria-label="palette" className="relative bg-white" ref={palette}>
-                  <div
-                    className="absolute h-full w-full"
-                    css={css`
-                      background: var(--selected-hue);
-                    `}
-                  >
-                    <div
-                      className="absolute h-full w-full"
-                      css={css`
-                        background: linear-gradient(
-                          to right,
-                          #fff 0%,
-                          transparent 100%
-                        );
-                      `}
-                    />
-                    <div
-                      className="absolute h-full w-full"
-                      css={css`
-                        background: linear-gradient(
-                          to bottom,
-                          transparent 0%,
-                          #000 100%
-                        );
-                      `}
-                    />
-                    <div
-                      className="absolute h-full w-full"
-                      css={css`
-                        background: linear-gradient(
-                          to bottom,
-                          transparent 0%,
-                          #000 100%
-                        );
-                      `}
-                    />
-                  </div>
-                  <div
-                    aria-label="marker"
-                    className="absolute h-4 w-4 rounded-full"
-                    css={css`
-                      border-color: #f7fafc;
-                      background-color: var(--selected-color);
-                      border-width: 2px;
-                      transform: translate(
-                        calc(var(--palette-marker-x, 0) * 1px - 8px),
-                        calc(var(--palette-marker-y, 0) * 1px - 8px)
-                      );
-                    `}
-                  />
-                </div>
-      
-                <div aria-label="hue" ref={hue} className="relative bg-white">
-                  <div
-                    className="absolute h-full w-full"
-                    css={css`
-                      background: linear-gradient(
-                        to bottom,
-                        hsl(0, 100%, 50%),
-                        hsl(60, 100%, 50%),
-                        hsl(120, 100%, 50%),
-                        hsl(180, 100%, 50%),
-                        hsl(240, 100%, 50%),
-                        hsl(300, 100%, 50%),
-                        hsl(360, 100%, 50%)
-                      );
-                    `}
-                  />
-                  <div
-                    aria-label="slider"
-                    className="absolute rounded-full"
-                    css={css`
-                      border-color: #f7fafc;
-                      background-color: var(--selected-hue);
-                      border-width: 2px;
-                      width: calc(100% + 4px);
-                      left: -2px;
-                      height: 10px;
-                      transform: translate(
-                        0px,
-                        calc(var(--hue-slider-y, 0) * 1px - 5px)
-                      );
-                    `}
-                  />
-                </div>
-              </div>
-}); */
-// ColorPickerPanel.displayName = "ColorPickerPanel";
 
 export const ColorPickerPalette = React.forwardRef(
   ({ className, ...props }, ref) => {
