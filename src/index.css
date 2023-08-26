@@ -7,7 +7,16 @@
         --bg-opacity:1;
         --text-opacity:1;
         --border-opacity:1;
-        
+        --hue-gradient: linear-gradient(
+            to bottom,
+            hsl(0, 100%, 50%),
+            hsl(60, 100%, 50%),
+            hsl(120, 100%, 50%),
+            hsl(180, 100%, 50%),
+            hsl(240, 100%, 50%),
+            hsl(300, 100%, 50%),
+            hsl(360, 100%, 50%)
+          );
         --gf:var(--gfx);
         --fe:var(--fex);
         --be:var(--bex);

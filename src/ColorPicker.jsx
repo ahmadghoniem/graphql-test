@@ -2,7 +2,7 @@
 /** @jsxImportSource @emotion/react */
 
 import { css } from "@emotion/react";
-import React, { Children, cloneElement } from "react";
+import React, { Children, cloneElement, useRef } from "react";
 import chroma from "chroma-js";
 import { clamp, useCombinedRefs, useMousemove, cn } from "./utils.js";
 
@@ -14,8 +14,6 @@ export const ColorPickerRoot = React.forwardRef(
     const picker = useCombinedRefs(React.useRef(), ref);
     const palette = React.useRef();
     const hue = React.useRef();
-    const result = React.useRef();
-    const resultText = React.useRef();
     const handleChange = React.useRef();
     React.useEffect(() => {
       handleChange.current = onChange;
@@ -29,16 +27,14 @@ export const ColorPickerRoot = React.forwardRef(
       }
     }, [picker]);
     const updateText = React.useCallback(() => {
-      const el = resultText.current;
       const root = picker.current;
       const color = chroma(root.style.getPropertyValue("--selected-color"));
-      el.innerText = color.rgb();
 
       const bg = chroma("#1a202c");
       if (chroma.scale([bg, color])(1).luminance() > 0.5) {
-        result.current.style.setProperty("--result-text-color", "#1a202c");
+        picker.current.style.setProperty("--result-text-color", "#1a202c");
       } else {
-        result.current.style.setProperty("--result-text-color", " #f7fafc");
+        picker.current.style.setProperty("--result-text-color", " #f7fafc");
       }
     }, [picker]);
     React.useEffect(() => {
@@ -131,23 +127,28 @@ export const ColorPickerRoot = React.forwardRef(
       <div
         aria-label="color-picker"
         ref={picker}
-        className={cn("p-3", className)}
+        className={cn(
+          "w-80 bg-[--color-picker-background] p-3 shadow-md",
+          className,
+        )}
         css={css`
           --selected-color: #ffffff;
           --selected-hue: #ff0000;
           --palette-marker-x: 0;
           --palette-marker-y: 0;
           --hue-slider-y: 0;
-          width: 340px;
-          box-shadow:
-            rgba(0, 0, 0, 0.3) 0px 0px 2px,
-            rgba(0, 0, 0, 0.3) 0px 4px 8px;
-          background: var(--color-picker-background);
         `}
         {...props}
       >
         {Children.map(children, (child, index) =>
-          cloneElement(child, {key:"1" }),
+          cloneElement(child, {
+            ref:
+              child.type.displayName === "ColorPickerPalette"
+                ? palette
+                : child.type.displayName === "ColorPickerHue"
+                ? hue
+                : null,
+          }),
         )}
       </div>
     );
@@ -158,58 +159,21 @@ ColorPickerRoot.displayName = "ColorPickerRoot";
 export const ColorPickerPalette = React.forwardRef(
   ({ className, ...props }, ref) => {
     return (
-      <div
-        aria-label="panel"
-        className={cn("mt-3 grid h-48 gap-3", className)}
-        css={css`
-          grid-template-columns: 1fr 50px 50px;
-        `}
-      >
-        <div aria-label="palette" className="relative bg-white" ref={ref}>
-          <div
-            className="absolute h-full w-full"
-            css={css`
-              background: var(--selected-hue);
-            `}
-          >
-            <div
-              className="absolute h-full w-full"
-              css={css`
-                background: linear-gradient(
-                  to right,
-                  #fff 0%,
-                  transparent 100%
-                );
-              `}
-            />
-            <div
-              className="absolute h-full w-full"
-              css={css`
-                background: linear-gradient(
-                  to bottom,
-                  transparent 0%,
-                  #000 100%
-                );
-              `}
-            />
-            <div
-              className="absolute h-full w-full"
-              css={css`
-                background: linear-gradient(
-                  to bottom,
-                  transparent 0%,
-                  #000 100%
-                );
-              `}
-            />
+      <div aria-label="panel" className={cn("grid h-48 gap-3", className)}>
+        <div
+          aria-label="palette"
+          className="relative bg-[--selected-hue] bg-white"
+          ref={ref}
+        >
+          <div className="absolute h-full w-full bg-[--selected-hue]">
+            <div className="absolute h-full w-full bg-gradient-to-r from-white" />
+            <div className="absolute h-full w-full bg-gradient-to-b from-transparent to-black" />
+            <div className="absolute h-full w-full bg-gradient-to-b from-transparent to-black" />
           </div>
           <div
             aria-label="marker"
-            className="absolute h-4 w-4 rounded-full"
+            className="absolute h-4 w-4 rounded-full border-2 border-[#f7fafc] bg-[--selected-color]"
             css={css`
-              border-color: #f7fafc;
-              background-color: var(--selected-color);
-              border-width: 2px;
               transform: translate(
                 calc(var(--palette-marker-x, 0) * 1px - 8px),
                 calc(var(--palette-marker-y, 0) * 1px - 8px)
@@ -231,31 +195,12 @@ export const ColorPickerHue = React.forwardRef(
         ref={ref}
         className={cn("relative bg-white", className)}
       >
-        <div
-          className="absolute h-full w-full"
-          css={css`
-            background: linear-gradient(
-              to bottom,
-              hsl(0, 100%, 50%),
-              hsl(60, 100%, 50%),
-              hsl(120, 100%, 50%),
-              hsl(180, 100%, 50%),
-              hsl(240, 100%, 50%),
-              hsl(300, 100%, 50%),
-              hsl(360, 100%, 50%)
-            );
-          `}
-        />
+        <div className="absolute h-full w-full bg-[image:--hue-gradient]" />
         <div
           aria-label="slider"
-          className="absolute rounded-full"
+          className="absolute -left-[0.0125rem] h-[0.625rem] rounded-full border-2 border-[#f7fafc] bg-[--selected-hue]"
           css={css`
-            border-color: #f7fafc;
-            background-color: var(--selected-hue);
-            border-width: 2px;
             width: calc(100% + 4px);
-            left: -2px;
-            height: 10px;
             transform: translate(0px, calc(var(--hue-slider-y, 0) * 1px - 5px));
           `}
         />
@@ -265,40 +210,17 @@ export const ColorPickerHue = React.forwardRef(
 );
 ColorPickerHue.displayName = "ColorPickerHue";
 
-// <div
-//           aria-label="result"
-//           ref={result}
-//           className="relative h-12"
-//           css={css`
-//             color: var(--result-text-color);
-//           `}
-//         >
-//           <div
-//             className="absolute h-full w-full"
-//             css={css`
-//               background-image: linear-gradient(
-//                   45deg,
-//                   #888 25%,
-//                   transparent 25%
-//                 ),
-//                 linear-gradient(-45deg, #888 25%, transparent 25%),
-//                 linear-gradient(45deg, transparent 75%, #888 75%),
-//                 linear-gradient(-45deg, transparent 75%, #888 75%);
-//               background-size: 16px 16px;
-//               background-position:
-//                 0 0,
-//                 0 8px,
-//                 8px -8px,
-//                 -8px 0px;
-//             `}
-//           />
-//           <div
-//             className="absolute h-full w-full"
-//             css={css`
-//               background: var(--selected-color);
-//             `}
-//           />
-//           <div className="absolute flex h-full w-full select-text items-center justify-center">
-//             <div ref={resultText} />
-//           </div>
-//         </div>
+export const ColorPickerResult = React.forwardRef(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <div
+        aria-label="result"
+        ref={ref}
+        className={cn("relative h-12 text-[--result-text-color]", className)}
+      >
+        {children}
+      </div>
+    );
+  },
+);
+ColorPickerResult.displayName = "ColorPickerResult";
