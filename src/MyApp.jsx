@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Comp } from "./xColor";
+import { ColorPickerRoot,ColorPickerPalette,ColorPickerHue } from "./ColorPicker";
 
 export const MyApp = () => {
   const [value, setValue] = useState(null);
@@ -10,5 +10,9 @@ export const MyApp = () => {
       .getComputedStyle(document.documentElement)
       .getPropertyValue("--result-text-color"),
   );
-  return <Comp onChange={setValue} />;
+  
+  return <ColorPickerRoot onChange={setValue} >
+    <ColorPickerPalette />
+    <ColorPickerHue />
+  </ColorPickerRoot>;
 };

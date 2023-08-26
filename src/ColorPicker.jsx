@@ -1,59 +1,18 @@
+/* eslint-disable react/no-unknown-property */
 /** @jsxImportSource @emotion/react */
 
 import { css } from "@emotion/react";
-import React from "react";
+import React, { Children, cloneElement } from "react";
 import chroma from "chroma-js";
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-function useMousemove(ref, callback) {
-  const cb = React.useRef();
-  React.useEffect(() => {
-    cb.current = callback;
-  }, [callback]);
-  React.useEffect(() => {
-    const el = ref.current;
-    const onmousemove = (e) => {
-      e.preventDefault();
-      cb.current(e);
-    };
-    const onmousedown = (e) => {
-      e.preventDefault();
-      window.addEventListener("mousemove", onmousemove);
-      window.addEventListener("mouseup", onmouseup);
-      cb.current(e);
-    };
-    const onmouseup = (e) => {
-      e.preventDefault();
-      window.removeEventListener("mousemove", onmousemove);
-    };
-    el.addEventListener("mousedown", onmousedown);
-    return () => {
-      el.removeEventListener("mousedown", onmousedown);
-      window.removeEventListener("mousemove", onmousemove);
-      window.removeEventListener("mouseup", onmouseup);
-    };
-  }, [ref]);
-}
-function useCombinedRefs(...refs) {
-  const targetRef = React.useRef();
-  React.useEffect(() => {
-    for (const ref of refs) {
-      if (!ref) continue;
-      if (typeof ref === "function") {
-        ref(targetRef.current);
-      } else {
-        ref.current = targetRef.current;
-      }
-    }
-  }, [refs]);
-  return targetRef;
-}
-export const ColorPicker = React.forwardRef(
-  ({ onChange, defaultValue = "#ff0000", ...props }, ref) => {
+import { clamp, useCombinedRefs, useMousemove, cn } from "./utils.js";
+
+export const ColorPickerRoot = React.forwardRef(
+  (
+    { onChange, defaultValue = "#ff0000", className, children, ...props },
+    ref,
+  ) => {
     const picker = useCombinedRefs(React.useRef(), ref);
     const palette = React.useRef();
-    const alpha = React.useRef();
     const hue = React.useRef();
     const result = React.useRef();
     const resultText = React.useRef();
@@ -64,35 +23,19 @@ export const ColorPicker = React.forwardRef(
     const onchange = React.useCallback(() => {
       if (handleChange.current) {
         const root = picker.current;
-        const alpha = parseFloat(
-          root.style.getPropertyValue("--selected-alpha"),
-        );
-        const color = chroma(
-          root.style.getPropertyValue("--selected-color"),
-        ).alpha(alpha);
-        handleChange.current(color.alpha(alpha));
+
+        const color = chroma(root.style.getPropertyValue("--selected-color"));
+        handleChange.current(color);
       }
     }, [picker]);
     const updateText = React.useCallback(() => {
       const el = resultText.current;
       const root = picker.current;
-      const alpha = parseFloat(root.style.getPropertyValue("--selected-alpha"));
-      const color = chroma(
-        root.style.getPropertyValue("--selected-color"),
-      ).alpha(alpha);
-      switch (el.dataset["type"]) {
-        case "hex":
-          el.innerText = color.alpha(alpha).hex();
-          break;
-        case "rgba":
-          el.innerText = color.alpha(alpha).css();
-          break;
-        case "hsla":
-          el.innerText = color.alpha(alpha).css("hsl");
-          break;
-      }
+      const color = chroma(root.style.getPropertyValue("--selected-color"));
+      el.innerText = color.rgb();
+
       const bg = chroma("#1a202c");
-      if (chroma.scale([bg, color])(alpha).luminance() > 0.5) {
+      if (chroma.scale([bg, color])(1).luminance() > 0.5) {
         result.current.style.setProperty("--result-text-color", "#1a202c");
       } else {
         result.current.style.setProperty("--result-text-color", " #f7fafc");
@@ -119,14 +62,10 @@ export const ColorPicker = React.forwardRef(
         "--hue-slider-y",
         ((h / 360) * elRect.height).toString(),
       );
-      root.style.setProperty("--selected-alpha", c.alpha().toString());
-      root.style.setProperty(
-        "--alpha-slider-y",
-        (elRect.height * (1 - c.alpha())).toString(),
-      );
-      resultText.current.dataset["type"] = "hex";
       updateText();
     }, [picker, updateText, defaultValue]);
+
+    // MOUSE MOVES
     useMousemove(palette, (e) => {
       const el = palette.current;
       const root = picker.current;
@@ -187,49 +126,18 @@ export const ColorPicker = React.forwardRef(
       updateText();
       onchange();
     });
-    useMousemove(alpha, (e) => {
-      const el = alpha.current;
-      const root = picker.current;
-      const elRect = el.getBoundingClientRect();
-      const y = clamp(e.clientY - elRect.top, 0, elRect.height);
-      const selectedAlpha = 1 - y / elRect.height;
-      root.style.setProperty("--selected-alpha", selectedAlpha.toString());
-      root.style.setProperty("--alpha-slider-y", y.toString());
-      updateText();
-      onchange();
-    });
-    function changeText() {
-      const el = resultText.current;
-      const root = picker.current;
-      const color = chroma(root.style.getPropertyValue("--selected-color"));
-      const alpha = parseFloat(root.style.getPropertyValue("--selected-alpha"));
-      switch (el.dataset["type"]) {
-        case "hex":
-          el.dataset["type"] = "rgba";
-          el.innerText = color.alpha(alpha).css();
-          break;
-        case "rgba":
-          el.dataset["type"] = "hsla";
-          el.innerText = color.alpha(alpha).css("hsl");
-          break;
-        case "hsla":
-          el.dataset["type"] = "hex";
-          el.innerText = color.alpha(alpha).hex();
-          break;
-      }
-    }
+
     return (
       <div
         aria-label="color-picker"
         ref={picker}
-        className="p-3"
+        className={cn("p-3", className)}
         css={css`
           --selected-color: #ffffff;
           --selected-hue: #ff0000;
           --palette-marker-x: 0;
           --palette-marker-y: 0;
           --hue-slider-y: 0;
-          --alpha-slider-y: 0;
           width: 340px;
           box-shadow:
             rgba(0, 0, 0, 0.3) 0px 0px 2px,
@@ -238,216 +146,159 @@ export const ColorPicker = React.forwardRef(
         `}
         {...props}
       >
-        <div
-          aria-label="result"
-          ref={result}
-          className="relative h-12"
-          css={css`
-            color: var(--result-text-color);
-          `}
-        >
+        {Children.map(children, (child, index) =>
+          cloneElement(child, {key:"1" }),
+        )}
+      </div>
+    );
+  },
+);
+ColorPickerRoot.displayName = "ColorPickerRoot";
+
+export const ColorPickerPalette = React.forwardRef(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        aria-label="panel"
+        className={cn("mt-3 grid h-48 gap-3", className)}
+        css={css`
+          grid-template-columns: 1fr 50px 50px;
+        `}
+      >
+        <div aria-label="palette" className="relative bg-white" ref={ref}>
           <div
             className="absolute h-full w-full"
             css={css`
-              background-image: linear-gradient(
-                  45deg,
-                  #888 25%,
-                  transparent 25%
-                ),
-                linear-gradient(-45deg, #888 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, #888 75%),
-                linear-gradient(-45deg, transparent 75%, #888 75%);
-              background-size: 16px 16px;
-              background-position:
-                0 0,
-                0 8px,
-                8px -8px,
-                -8px 0px;
+              background: var(--selected-hue);
             `}
-          />
-          <div
-            className="absolute h-full w-full"
-            css={css`
-              background: var(--selected-color);
-              opacity: var(--selected-alpha);
-            `}
-          />
-          <div className="absolute flex h-full w-full select-text items-center justify-center">
-            <div ref={resultText} />
-            <button
-              onClick={changeText}
-              className="rounded-lg px-2"
-              css={css`
-                :focus {
-                  ${`outline-none`}
-                }
-                :hover {
-                  ${`text-gray-600`}
-                }
-              `}
-            >
-              <svg
-                id="i-options"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 32 32"
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentcolor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              >
-                <path d="M28 6 L4 6 M28 16 L4 16 M28 26 L4 26 M24 3 L24 9 M8 13 L8 19 M20 23 L20 29" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div
-          aria-label="panel"
-          className="mt-3 grid h-48 gap-3"
-          css={css`
-            grid-template-columns: 1fr 50px 50px;
-          `}
-        >
-          <div aria-label="palette" className="relative bg-white" ref={palette}>
-            <div
-              className="absolute h-full w-full"
-              css={css`
-                background: var(--selected-hue);
-              `}
-            >
-              <div
-                className="absolute h-full w-full"
-                css={css`
-                  background: linear-gradient(
-                    to right,
-                    #fff 0%,
-                    transparent 100%
-                  );
-                `}
-              />
-              <div
-                className="absolute h-full w-full"
-                css={css`
-                  background: linear-gradient(
-                    to bottom,
-                    transparent 0%,
-                    #000 100%
-                  );
-                `}
-              />
-              <div
-                className="absolute h-full w-full"
-                css={css`
-                  background: linear-gradient(
-                    to bottom,
-                    transparent 0%,
-                    #000 100%
-                  );
-                `}
-              />
-            </div>
-            <div
-              aria-label="marker"
-              className="absolute h-4 w-4 rounded-full"
-              css={css`
-                border-color: #f7fafc;
-                background-color: var(--selected-color);
-                border-width: 2px;
-                transform: translate(
-                  calc(var(--palette-marker-x, 0) * 1px - 8px),
-                  calc(var(--palette-marker-y, 0) * 1px - 8px)
-                );
-              `}
-            />
-          </div>
-          <div
-            aria-label="alpha"
-            ref={alpha}
-            className="relative h-full bg-white"
           >
             <div
               className="absolute h-full w-full"
               css={css`
-                background-image: linear-gradient(
-                    45deg,
-                    #888 25%,
-                    transparent 25%
-                  ),
-                  linear-gradient(-45deg, #888 25%, transparent 25%),
-                  linear-gradient(45deg, transparent 75%, #888 75%),
-                  linear-gradient(-45deg, transparent 75%, #888 75%);
-                background-size: 16px 16px;
-                background-position:
-                  0 0,
-                  0 8px,
-                  8px -8px,
-                  -8px 0px;
-              `}
-            />
-            <div
-              className="absolute h-full w-full"
-              css={css`
                 background: linear-gradient(
-                  to bottom,
-                  var(--selected-color) 0%,
+                  to right,
+                  #fff 0%,
                   transparent 100%
                 );
               `}
             />
             <div
-              aria-label="slider"
-              className="absolute rounded-full"
+              className="absolute h-full w-full"
               css={css`
-                border-color: #f7fafc;
-                border-width: 2px;
-                width: calc(100% + 4px);
-                left: -2px;
-                height: 10px;
-                transform: translate(
-                  0px,
-                  calc(var(--alpha-slider-y, 0) * 1px - 5px)
+                background: linear-gradient(
+                  to bottom,
+                  transparent 0%,
+                  #000 100%
                 );
               `}
             />
-          </div>
-          <div aria-label="hue" ref={hue} className="relative bg-white">
             <div
               className="absolute h-full w-full"
               css={css`
                 background: linear-gradient(
                   to bottom,
-                  hsl(0, 100%, 50%),
-                  hsl(60, 100%, 50%),
-                  hsl(120, 100%, 50%),
-                  hsl(180, 100%, 50%),
-                  hsl(240, 100%, 50%),
-                  hsl(300, 100%, 50%),
-                  hsl(360, 100%, 50%)
-                );
-              `}
-            />
-            <div
-              aria-label="slider"
-              className="absolute rounded-full"
-              css={css`
-                border-color: #f7fafc;
-                background-color: var(--selected-hue);
-                border-width: 2px;
-                width: calc(100% + 4px);
-                left: -2px;
-                height: 10px;
-                transform: translate(
-                  0px,
-                  calc(var(--hue-slider-y, 0) * 1px - 5px)
+                  transparent 0%,
+                  #000 100%
                 );
               `}
             />
           </div>
+          <div
+            aria-label="marker"
+            className="absolute h-4 w-4 rounded-full"
+            css={css`
+              border-color: #f7fafc;
+              background-color: var(--selected-color);
+              border-width: 2px;
+              transform: translate(
+                calc(var(--palette-marker-x, 0) * 1px - 8px),
+                calc(var(--palette-marker-y, 0) * 1px - 8px)
+              );
+            `}
+          />
         </div>
       </div>
     );
   },
 );
-ColorPicker.displayName = "ColorPicker";
+ColorPickerPalette.displayName = "ColorPickerPalette";
+
+export const ColorPickerHue = React.forwardRef(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        aria-label="hue"
+        ref={ref}
+        className={cn("relative bg-white", className)}
+      >
+        <div
+          className="absolute h-full w-full"
+          css={css`
+            background: linear-gradient(
+              to bottom,
+              hsl(0, 100%, 50%),
+              hsl(60, 100%, 50%),
+              hsl(120, 100%, 50%),
+              hsl(180, 100%, 50%),
+              hsl(240, 100%, 50%),
+              hsl(300, 100%, 50%),
+              hsl(360, 100%, 50%)
+            );
+          `}
+        />
+        <div
+          aria-label="slider"
+          className="absolute rounded-full"
+          css={css`
+            border-color: #f7fafc;
+            background-color: var(--selected-hue);
+            border-width: 2px;
+            width: calc(100% + 4px);
+            left: -2px;
+            height: 10px;
+            transform: translate(0px, calc(var(--hue-slider-y, 0) * 1px - 5px));
+          `}
+        />
+      </div>
+    );
+  },
+);
+ColorPickerHue.displayName = "ColorPickerHue";
+
+// <div
+//           aria-label="result"
+//           ref={result}
+//           className="relative h-12"
+//           css={css`
+//             color: var(--result-text-color);
+//           `}
+//         >
+//           <div
+//             className="absolute h-full w-full"
+//             css={css`
+//               background-image: linear-gradient(
+//                   45deg,
+//                   #888 25%,
+//                   transparent 25%
+//                 ),
+//                 linear-gradient(-45deg, #888 25%, transparent 25%),
+//                 linear-gradient(45deg, transparent 75%, #888 75%),
+//                 linear-gradient(-45deg, transparent 75%, #888 75%);
+//               background-size: 16px 16px;
+//               background-position:
+//                 0 0,
+//                 0 8px,
+//                 8px -8px,
+//                 -8px 0px;
+//             `}
+//           />
+//           <div
+//             className="absolute h-full w-full"
+//             css={css`
+//               background: var(--selected-color);
+//             `}
+//           />
+//           <div className="absolute flex h-full w-full select-text items-center justify-center">
+//             <div ref={resultText} />
+//           </div>
+//         </div>
