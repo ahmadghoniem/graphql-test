@@ -148,7 +148,7 @@ export const ColorPickerRoot = React.forwardRef(
       >
         {Children.map(children, (child, index) =>
           cloneElement(child, {
-              ref={child.displayName}
+              ref={ child.displayName ==="ColorPickerPalette"? palette : (child.displayName ==="ColorPickerHue")? hue:"" }
           }),
         )}
       </div>
