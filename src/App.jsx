@@ -9,7 +9,7 @@ import tinycolor from "tinycolor2";
 let SUPER_SECRET_APIKEY;
 if (import.meta.env.MODE === "development") {
   console.log("devvvvvvvv");
-  SUPER_SECRET_APIKEY = "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";
+  SUPER_SECRET_APIKEY = "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";
 } else {
   console.log("PRODDDDD");
   SUPER_SECRET_APIKEY = import.meta.env.VITE_SUPER_SECRET_APIKEY;
@@ -36,13 +36,9 @@ function App() {
     },
   });
   const toRGB = (color) =>
-    Object.values(tinycolor(`#${color}`).toRgb())
-      .slice(0, -1)
-      .join(" ");
+    Object.values(tinycolor(color).toRgb()).slice(0, -1).join(" ");
   const invertRgb = (color) =>
-    tinycolor(`#${color}`).getLuminance() > 0.179
-      ? "000 000 000"
-      : "255 255 255";
+    tinycolor(color).getLuminance() > 0.179 ? "000 000 000" : "255 255 255";
   useEffect(() => {
     const document = gql`
       query ($last: Int, $owner: String!, $repoName: String!) {
@@ -145,43 +141,39 @@ function App() {
     },
   } = data.repository;
 
-  document
-    .querySelector(":root")
-    .style.setProperty(
-      "--good-first-issue-label-color",
-      toRGB(goodFirstIssueIssueLabelColor),
-    );
-  document
-    .querySelector(":root")
-    .style.setProperty(
-      "--frontend-issue-label-color",
-      toRGB(FrontendIssueLabelColor),
-    );
-  document
-    .querySelector(":root")
-    .style.setProperty(
-      "--backend-issue-label-color",
-      toRGB(BackendIssueLabelColor),
-    );
-  document
-    .querySelector(":root")
-    .style.setProperty(
-      "--microcontrollers-issue-label-color",
-      toRGB(MicrocontrollersIssueLabelColor),
-    );
+  document.documentElement.style.setProperty(
+    "--good-first-issue-label-color",
+    toRGB(goodFirstIssueIssueLabelColor),
+  );
+  document.documentElement.style.setProperty(
+    "--frontend-issue-label-color",
+    toRGB(FrontendIssueLabelColor),
+  );
+  document.documentElement.style.setProperty(
+    "--backend-issue-label-color",
+    toRGB(BackendIssueLabelColor),
+  );
+  document.documentElement.style.setProperty(
+    "--microcontrollers-issue-label-color",
+    toRGB(MicrocontrollersIssueLabelColor),
+  );
   // for inverted colors
-  document
-    .querySelector(":root")
-    .style.setProperty("--gfx", invertRgb(goodFirstIssueIssueLabelColor));
-  document
-    .querySelector(":root")
-    .style.setProperty("--fex", invertRgb(FrontendIssueLabelColor));
-  document
-    .querySelector(":root")
-    .style.setProperty("--bex", invertRgb(BackendIssueLabelColor));
-  document
-    .querySelector(":root")
-    .style.setProperty("--mcx", invertRgb(MicrocontrollersIssueLabelColor));
+  document.documentElement.style.setProperty(
+    "--gfx",
+    invertRgb(goodFirstIssueIssueLabelColor),
+  );
+  document.documentElement.style.setProperty(
+    "--fex",
+    invertRgb(FrontendIssueLabelColor),
+  );
+  document.documentElement.style.setProperty(
+    "--bex",
+    invertRgb(BackendIssueLabelColor),
+  );
+  document.documentElement.style.setProperty(
+    "--mcx",
+    invertRgb(MicrocontrollersIssueLabelColor),
+  );
 
   return (
     <div className=" p-4">
@@ -233,7 +225,10 @@ function App() {
         </button>
       </p>
 
-      <button onClick={() => document.documentElement.classList.toggle("dark")}>
+      <button
+        className="relative z-0 after:absolute after:-inset-x-2 after:-bottom-[0.125rem] after:-z-10 after:h-3 after:bg-[image:url('./assets/underline.svg')] after:bg-no-repeat"
+        onClick={() => document.documentElement.classList.toggle("dark")}
+      >
         toggle dark mode
       </button>
     </div>
