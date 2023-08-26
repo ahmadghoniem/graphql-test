@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Comp } from "./Comp";
+import { Comp } from "./xColor";
 
 export const MyApp = () => {
   const [value, setValue] = useState(null);
