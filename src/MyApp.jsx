@@ -24,7 +24,9 @@ export const MyApp = () => {
       <p
         className="text-[--selected-color]"
         style={{ color: textColor?.css(), backgroundColor: value?.css() }}
-      ></p>
+      >
+        Hello, World
+      </p>
       <ColorPickerRoot
         className="flex flex-row gap-2 bg-[#24283B]"
         onColorChange={setValue}
