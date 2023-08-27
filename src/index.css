@@ -7,6 +7,7 @@
         --bg-opacity:1;
         --text-opacity:1;
         --border-opacity:1;
+        --palette-saturation-gradient: linear-gradient(0deg,#000,transparent),linear-gradient(90deg,#fff,hsla(0,0%,100%,0));
         --hue-gradient: linear-gradient(
             to bottom,
             hsl(0, 100%, 50%),

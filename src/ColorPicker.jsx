@@ -4,25 +4,39 @@
 import React, { Children, cloneElement } from "react";
 import chroma from "chroma-js";
 import { clamp, useCombinedRefs, useMousemove, cn } from "./utils.js";
-const presetCssVar = {
+const presetCssVars = {
   "--selected-color": "#ffffff",
-  "--selected-hue": "#ff0000",
   "--palette-marker-x": "0",
   "--palette-marker-y": "0",
   "--hue-slider-y:": "0",
 };
 export const ColorPickerRoot = React.forwardRef(
   (
-    { onChange, defaultValue = "#ff0000", className, children, ...props },
+    {
+      onColorChange,
+      onTextColorChange,
+      defaultValue = "#ff0000",
+      luminanceSetPoint = 0.5,
+      className,
+      children,
+      ...props
+    },
     ref,
   ) => {
     const picker = useCombinedRefs(React.useRef(), ref);
     const palette = React.useRef();
     const hue = React.useRef();
     const handleChange = React.useRef();
+    const handleTextColorChange = React.useRef();
+
     React.useEffect(() => {
-      handleChange.current = onChange;
-    }, [onChange]);
+      handleChange.current = onColorChange;
+    }, [onColorChange]);
+
+    React.useEffect(() => {
+      handleTextColorChange.current = onTextColorChange;
+    }, [onTextColorChange]);
+
     const onchange = React.useCallback(() => {
       if (handleChange.current) {
         const root = picker.current;
@@ -31,17 +45,21 @@ export const ColorPickerRoot = React.forwardRef(
         handleChange.current(color);
       }
     }, [picker]);
+
     const updateText = React.useCallback(() => {
       const root = picker.current;
       const color = chroma(root.style.getPropertyValue("--selected-color"));
 
       const bg = chroma("#1a202c");
-      if (chroma.scale([bg, color])(1).luminance() > 0.5) {
+      if (chroma.scale([bg, color])(1).luminance() > luminanceSetPoint) {
         picker.current.style.setProperty("--result-text-color", "#1a202c");
+        handleTextColorChange.current(chroma("#1a202c"));
       } else {
         picker.current.style.setProperty("--result-text-color", " #f7fafc");
+        handleTextColorChange.current(chroma("#f7fafc"));
       }
-    }, [picker]);
+    }, [picker, luminanceSetPoint]);
+
     React.useEffect(() => {
       const root = picker.current;
       const c =
@@ -132,7 +150,7 @@ export const ColorPickerRoot = React.forwardRef(
       <div
         aria-label="color-picker"
         ref={picker}
-        style={presetCssVar}
+        style={{ presetCssVars, "--selected-hue": defaultValue }}
         className={cn(
           "w-80 bg-[--color-picker-background] p-3 shadow-md",
           className,
@@ -140,7 +158,7 @@ export const ColorPickerRoot = React.forwardRef(
         {...props}
       >
         {Children.map(children, (child, index) => {
-          console.log(child);
+          // console.log(child);
           return cloneElement(child, {
             ref:
               child.type.displayName === "ColorPickerPanel"
@@ -172,14 +190,10 @@ export const ColorPickerPalette = React.forwardRef(
     return (
       <div
         aria-label="palette"
-        className={cn("relative bg-[#df3f3f] bg-[--selected-hue]", className)}
+        className={cn("relative bg-[--selected-hue]", className)}
         ref={ref}
       >
-        <div className="absolute h-full w-full bg-[--selected-hue]">
-          <div className="absolute h-full w-full bg-gradient-to-r from-white" />
-          <div className="absolute h-full w-full bg-gradient-to-b from-transparent to-black" />
-        </div>
-
+        <div className="absolute h-full w-full bg-[--selected-hue] bg-[image:var(--palette-saturation-gradient)]" />
         {children}
       </div>
     );
@@ -192,7 +206,10 @@ export const ColorPickerMarker = React.forwardRef(
     return (
       <div
         aria-label="marker"
-        className="absolute h-4 w-4 translate-x-[calc(var(--palette-marker-x,0)*1px-8px)] translate-y-[calc(var(--palette-marker-y,0)*1px-8px)] transform rounded-full border-2 border-[#f7fafc] bg-[--selected-color]"
+        className={cn(
+          "absolute h-4 w-4 translate-x-[calc(var(--palette-marker-x,0)*1px-8px)] translate-y-[calc(var(--palette-marker-y,0)*1px-8px)] transform rounded-full border-2 border-[#f7fafc] bg-[--selected-color]",
+          className,
+        )}
       />
     );
   },
@@ -200,7 +217,7 @@ export const ColorPickerMarker = React.forwardRef(
 ColorPickerMarker.displayName = "ColorPickerMarker";
 
 export const ColorPickerHue = React.forwardRef(
-  ({ className, ...props }, ref) => {
+  ({ className, children, ...props }, ref) => {
     return (
       <div
         aria-label="hue"
@@ -208,12 +225,24 @@ export const ColorPickerHue = React.forwardRef(
         className={cn("relative bg-white", className)}
       >
         <div className="absolute h-full w-full bg-[image:--hue-gradient]" />
-        <div
-          aria-label="slider"
-          className="absolute -left-[0.0125rem] h-[0.625rem] w-[calc(100%+0.25rem)] translate-y-[calc(var(--hue-slider-y,0)*1px-5px)] rounded-full border-2 border-[#f7fafc] bg-[--selected-hue]"
-        />
+        {children}
       </div>
     );
   },
 );
 ColorPickerHue.displayName = "ColorPickerHue";
+// -2px in calc is for the border-width i guess (nope)
+export const ColorPickerHueSlider = React.forwardRef(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        aria-label="slider"
+        className={cn(
+          "absolute -left-[0.125rem] h-[0.625rem] w-[calc(100%+0.25rem)] translate-y-[calc(var(--hue-slider-y,0)*1px-2px)] rounded-full border-2 border-[#BEBFC4] bg-[--selected-hue]",
+          className,
+        )}
+      />
+    );
+  },
+);
+ColorPickerHueSlider.displayName = "ColorPickerHueSlider";
