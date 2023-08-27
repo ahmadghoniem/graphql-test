@@ -20,8 +20,11 @@ export const MyApp = () => {
   console.log(value?.rgb());
   console.log(textColor?.rgb());
   return (
-    <div>
-      <p className="text-[--selected-color]">mine</p>
+    <>
+      <p
+        className="text-[--selected-color]"
+        style={{ color: textColor?.css(), backgroundColor: value?.css() }}
+      ></p>
       <ColorPickerRoot
         className="flex flex-row gap-2 bg-[#24283B]"
         onColorChange={setValue}
@@ -37,6 +40,6 @@ export const MyApp = () => {
           <ColorPickerHueSlider className="h-1 rounded-none border border-[#c4bebe]" />
         </ColorPickerHue>
       </ColorPickerRoot>
-    </div>
+    </>
   );
 };
