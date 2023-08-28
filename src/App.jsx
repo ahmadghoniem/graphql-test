@@ -9,7 +9,7 @@ import tinycolor from "tinycolor2";
 let SUPER_SECRET_APIKEY;
 if (import.meta.env.MODE === "development") {
   console.log("devvvvvvvv");
-  SUPER_SECRET_APIKEY = "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";
+  SUPER_SECRET_APIKEY = import.meta.env.VITE_SUPER_SECRET_APIKEY;
 } else {
   console.log("PRODDDDD");
   SUPER_SECRET_APIKEY = import.meta.env.VITE_SUPER_SECRET_APIKEY;
@@ -44,7 +44,17 @@ function App() {
       query ($last: Int, $owner: String!, $repoName: String!) {
         repository(owner: $owner, name: $repoName) {
           stargazerCount
-
+          description
+          repositoryTopics(last: 20) {
+            edges {
+              node {
+                topic {
+                  name
+                }
+              }
+            }
+            totalCount
+          }
           openedIssues: issues(last: $last, states: OPEN) {
             totalCount
           }
@@ -70,18 +80,22 @@ function App() {
           goodFirstIssueLabel: label(name: "good first issue") {
             color
             description
+            name
           }
           MicrocontrollersLabel: label(name: "Microcontrollers") {
             color
             description
+            name
           }
           FrontendLabel: label(name: "Frontend") {
             color
             description
+            name
           }
           BackendLabel: label(name: "Backend") {
             color
             description
+            name
           }
           forks: forks(last: $last) {
             totalCount
@@ -140,6 +154,7 @@ function App() {
       description: BackendLabelDesc,
     },
   } = data.repository;
+  // $0.style= `--sheko:zxx; --var1:neko;`;
 
   document.documentElement.style.setProperty(
     "--good-first-issue-label-color",

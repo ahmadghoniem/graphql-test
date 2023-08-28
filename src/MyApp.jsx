@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ColorPickerRoot,
   ColorPickerPalette,
@@ -16,32 +16,32 @@ import {
 export const MyApp = () => {
   const [value, setValue] = useState(null);
   const [textColor, setTextColor] = useState(null);
-  const [luminanceSetPoint, setLuminanceSetPoint] = useState("0.5");
-  console.log(value?.rgb());
-  console.log(textColor?.rgb());
+  // setting the css variables on the makes t he colorpicker completely uncontrolled and as read-only
+  // you can't set the color from elsewhere otherthan the palette itself
   return (
-    <>
-      <p
-        className="text-[--selected-color]"
-        style={{ color: textColor?.css(), backgroundColor: value?.css() }}
-      >
+    <div>
+      <p className=" bg-[rgb(var(--selected-color))]/90 text-[rgb(var(--result-text-color))]/100 ">
         Hello, World
       </p>
       <ColorPickerRoot
         className="flex flex-row gap-2 bg-[#24283B]"
-        onColorChange={setValue}
+        onColorChange={(color) => {
+          console.log(color.rgb());
+          fetch(`${color}`);
+        }}
         onTextColorChange={setTextColor}
-        luminanceSetPoint={luminanceSetPoint}
+        luminanceSetPoint={0.179}
       >
         <ColorPickerPanel className="w-full">
           <ColorPickerPalette>
             <ColorPickerMarker />
           </ColorPickerPalette>
         </ColorPickerPanel>
+        {/**you would ned to adjust width of pickerhue to us the circle slider */}
         <ColorPickerHue className="w-9">
-          <ColorPickerHueSlider className="h-1 rounded-none border border-[#c4bebe]" />
+          <ColorPickerHueSlider variant="circle" size="md" />
         </ColorPickerHue>
       </ColorPickerRoot>
-    </>
+    </div>
   );
 };
