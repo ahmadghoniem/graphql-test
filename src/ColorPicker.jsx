@@ -3,6 +3,7 @@
 
 import React, { Children, cloneElement, useMemo } from "react";
 import chroma from "chroma-js";
+import tinyColor from "tinycolor2";
 import { clamp, useCombinedRefs, useMousemove, cn } from "./utils.js";
 import { cva } from "class-variance-authority";
 const presetCssVars = {
@@ -93,7 +94,7 @@ export const ColorPickerRoot = React.forwardRef(
         handleTextColorChange.current(chroma("#f7fafc"));
       }
     }, [picker, luminanceSetPoint]);
-
+    // update text and color when hue changes?
     React.useEffect(() => {
       const root = picker.current;
       const c =
