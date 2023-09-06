@@ -33,8 +33,12 @@ export const MyApp = () => {
   return (
     <Card>
       <CardContent asChild>
-        <ColorPickerProvider className="bg-[#24283B]" luminanceSetPoint={0.179}>
-          <CardTitle className=" bg-[--selected-color] text-[rgb(var(--result-text-color))]/100 ">
+        {/**delegates all style of cardcontent to colorpicker plain provider while keepnig the logic inside of the provider intact */}
+        <ColorPickerProvider className="bg-[#24283B]" luminanceSetPoint={0.5}>
+          <CardTitle
+            id="zz"
+            className=" bg-[hsl(var(--selected-color))] text-[hsl(var(--result-text-color))]/100 "
+          >
             Hello, World
           </CardTitle>
 

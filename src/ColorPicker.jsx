@@ -3,10 +3,16 @@
 import React, { Children, cloneElement, useMemo } from "react";
 
 import chroma from "chroma-js";
-import { clamp, useCombinedRefs, useMousemove, cn } from "./utils.js";
+import {
+  clamp,
+  useCombinedRefs,
+  useMousemove,
+  cn,
+  HslArgsFromCSS,
+} from "./utils.js";
 import { cva } from "class-variance-authority";
 const presetCssVars = {
-  "--selected-color": "#ffffff",
+  "--selected-color": "100 100% 100%",
   "--palette-marker-x": "0",
   "--palette-marker-y": "0",
   "--hue-slider-y:": "0",
@@ -50,7 +56,6 @@ export const ColorPickerProvider = React.forwardRef(
     const palette = React.useRef();
     const hue = React.useRef();
     const handleChange = React.useRef();
-    // const handleTextColorChange = React.useRef();
     const styleObj = useMemo(
       () => ({ presetCssVars, "--selected-hue": defaultValue }),
       [defaultValue],
@@ -65,25 +70,26 @@ export const ColorPickerProvider = React.forwardRef(
     const onchange = React.useCallback(() => {
       if (handleChange.current) {
         const root = picker.current;
-        const color = chroma(root.style.getPropertyValue("--selected-color"));
+        const color = chroma(HslArgsFromCSS(root, "--selected-color"));
         handleChange.current(color);
       }
     }, [picker]);
 
     const updateText = React.useCallback(() => {
       const root = picker.current;
-      const color = chroma(root.style.getPropertyValue("--selected-color"));
-
+      const color = chroma(HslArgsFromCSS(root, "--selected-color"));
+      console.log(chroma.scale([bg, color])(1).luminance());
       const bg = chroma("#1a202c");
       if (chroma.scale([bg, color])(1).luminance() > luminanceSetPoint) {
-        picker.current.style.setProperty("--result-text-color", "#1a202c");
-        // handleTextColorChange.current(chroma("#1a202c"));
+        picker.current.style.setProperty(
+          "--result-text-color",
+          "220 25.71% 13.73%",
+        );
       } else {
         picker.current.style.setProperty(
           "--result-text-color",
-          chroma("#f7fafc").rgb().join(" "),
+          "204 45.45% 97.84%",
         );
-        // handleTextColorChange.current(chroma("#f7fafc"));
       }
     }, [picker, luminanceSetPoint]);
     // update text and color when hue changes?
@@ -93,7 +99,10 @@ export const ColorPickerProvider = React.forwardRef(
         typeof defaultValue === "string" ? chroma(defaultValue) : defaultValue;
       const h = c.get("hsl.h") || 0;
       root.style.setProperty("--selected-hue", chroma.hsl(h, 1, 0.5).hex());
-      root.style.setProperty("--selected-color", c.hex());
+      root.style.setProperty(
+        "--selected-color",
+        c.css("hsl").slice(4, -1).replaceAll(",", " "),
+      );
 
       const el = palette.current;
       console.log(palette);
@@ -111,23 +120,15 @@ export const ColorPickerProvider = React.forwardRef(
         ((h / 360) * elRect.height).toString(),
       );
       updateText();
-      console.log(root);
     }, [picker, updateText, defaultValue]);
 
     // MOUSE MOVES
     useMousemove(palette, (e) => {
       const el = palette.current;
       const root = picker.current;
-      // console.log(root);
       const elRect = el.getBoundingClientRect();
       let x = clamp(e.clientX - elRect.left, 0, elRect.width);
-      if (e.ctrlKey) {
-        x = parseFloat(root.style.getPropertyValue("--palette-marker-x"));
-      }
       let y = clamp(e.clientY - elRect.top, 0, elRect.height);
-      if (e.shiftKey) {
-        y = parseFloat(root.style.getPropertyValue("--palette-marker-y"));
-      }
       const h = chroma(root.style.getPropertyValue("--selected-hue")).get(
         "hsv.h",
       );
@@ -136,7 +137,10 @@ export const ColorPickerProvider = React.forwardRef(
         x / elRect.width,
         1 - y / elRect.height,
       );
-      root.style.setProperty("--selected-color", selectedColor.hex());
+      root.style.setProperty(
+        "--selected-color",
+        chroma(selectedColor).css("hsl").slice(4, -1).replaceAll(",", " "),
+      );
 
       root.style.setProperty("--palette-marker-x", x.toString());
       root.style.setProperty("--palette-marker-y", y.toString());
@@ -173,14 +177,18 @@ export const ColorPickerProvider = React.forwardRef(
         parseFloat(px) / plRect.width,
         "rgb",
       );
-      root.style.setProperty("--selected-color", selectedColor.hex());
+      root.style.setProperty(
+        "--selected-color",
+        chroma(selectedColor).css("hsl").slice(4, -1).replaceAll(",", " "),
+      );
 
       updateText();
       onchange();
     });
+
     return (
       <div
-        // aria-label="color-picker-provider"
+        aria-label="color-picker-provider"
         style={styleObj}
         className={cn("flex flex-col w-80  p-3 shadow-md gap-y-4", className)}
         ref={picker}

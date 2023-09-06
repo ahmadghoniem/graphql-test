@@ -1,7 +1,3 @@
 import chroma from "chroma-js";
-const c = chroma.hsl(
-  ..."208 45% 23%"
-    .split(" ")
-    .map((e, i) => (i === 0 ? parseInt(e) : parseFloat(e) / 100)),
-);
-console.log(c.rgb());
+const c = chroma.rgb(..."255 254 255".split(" "));
+console.log(c.css());

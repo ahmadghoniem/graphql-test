@@ -52,3 +52,11 @@ export function useCombinedRefs(...refs) {
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
+export function HslArgsFromCSS(root, CSSvariable) {
+  return root.style
+    .getPropertyValue(CSSvariable)
+    .split(" ")
+    .map((e, i) => (i === 0 ? parseInt(e) : parseFloat(e) / 100));
+}
+
+// HslArgsFromCSS(root, "--selected-color")
