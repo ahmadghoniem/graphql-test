@@ -1,0 +1,9 @@
+git clone --no-checkout --depth 1 --branch main https://github.com/ahmadghoniem/SerialBlocks.git
+
+cd SerialBlocks
+
+git sparse-checkout init --cone
+
+git sparse-checkout set client/src/api
+
+git checkout @

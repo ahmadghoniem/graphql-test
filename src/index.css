@@ -2,36 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base  {
-    :root {
-        --bg-opacity:1;
-        --text-opacity:1;
-        --border-opacity:1;
-        --palette-saturation-gradient: linear-gradient(0deg,#000,transparent),linear-gradient(90deg,#fff,hsla(0,0%,100%,0));
-        --hue-gradient: linear-gradient(
-            to bottom,
-            hsl(0, 100%, 50%),
-            hsl(60, 100%, 50%),
-            hsl(120, 100%, 50%),
-            hsl(180, 100%, 50%),
-            hsl(240, 100%, 50%),
-            hsl(300, 100%, 50%),
-            hsl(360, 100%, 50%)
-          );
-        --gf:var(--gfx);
-        --fe:var(--fex);
-        --be:var(--bex);
-        --mc:var(--mcx);
+@layer base {
+  :root {
+    --bg-opacity: 1;
+    --text-opacity: 1;
+    --border-opacity: 1;
+    --palette-saturation-gradient: linear-gradient(0deg, #000, transparent),
+      linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
+    --hue-gradient: linear-gradient(
+      to bottom,
+      hsl(0, 100%, 50%),
+      hsl(60, 100%, 50%),
+      hsl(120, 100%, 50%),
+      hsl(180, 100%, 50%),
+      hsl(240, 100%, 50%),
+      hsl(300, 100%, 50%),
+      hsl(360, 100%, 50%)
+    );
+    --gf: var(--gfx);
+    --fe: var(--fex);
+    --be: var(--bex);
+    --mc: var(--mcx);
+  }
+  :root.dark {
+    --bg-opacity: 0.18;
+    --text-opacity: 1;
+    --border-opacity: 0.3;
 
-    }
-    :root.dark  {
-        --bg-opacity:0.18;
-        --text-opacity:1;
-        --border-opacity:0.3;
-
-        --gf:var(--good-first-issue-label-color);
-        --fe:var(--frontend-issue-label-color);
-        --be:var(--backend-issue-label-color);
-        --mc:var(--microcontrollers-issue-label-color);
-    }
+    --gf: var(--good-first-issue-label-color);
+    --fe: var(--frontend-issue-label-color);
+    --be: var(--backend-issue-label-color);
+    --mc: var(--microcontrollers-issue-label-color);
+  }
 }
