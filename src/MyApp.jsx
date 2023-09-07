@@ -1,11 +1,4 @@
 import {
-  useEffect,
-  useRef,
-  useState,
-  isValidElement,
-  cloneElement,
-} from "react";
-import {
   ColorPickerProvider,
   ColorPickerPalette,
   ColorPickerHue,
@@ -34,11 +27,8 @@ export const MyApp = () => {
     <Card>
       <CardContent asChild>
         {/**delegates all style of cardcontent to colorpicker plain provider while keepnig the logic inside of the provider intact */}
-        <ColorPickerProvider className="bg-[#24283B]" luminanceSetPoint={0.5}>
-          <CardTitle
-            id="zz"
-            className=" bg-[hsl(var(--selected-color))] text-[hsl(var(--result-text-color))]/100 "
-          >
+        <ColorPickerProvider className="bg-[#24283B]" luminanceSetPoint={0.179}>
+          <CardTitle className=" bg-[rgb(var(--selected-color))] text-[rgb(var(--result-text-color))]/100 ">
             Hello, World
           </CardTitle>
 
@@ -48,9 +38,8 @@ export const MyApp = () => {
                 <ColorPickerMarker />
               </ColorPickerPalette>
             </ColorPickerPanel>
-            {/**you would ned to adjust width of pickerhue to us the circle slider */}
             <ColorPickerHue className="w-9">
-              <ColorPickerHueSlider variant="circle" size="md" className="" />
+              <ColorPickerHueSlider />
             </ColorPickerHue>
           </ColorPickerContent>
         </ColorPickerProvider>
