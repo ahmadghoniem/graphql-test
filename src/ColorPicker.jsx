@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unknown-property */
 
-import React, { Children, cloneElement, useMemo } from "react";
+import React, { useMemo } from "react";
 
 import chroma from "chroma-js";
 import { clamp, useCombinedRefs, useMousemove, cn } from "./utils.js";
@@ -42,11 +42,14 @@ export const ColorPickerProvider = React.forwardRef(
       luminanceSetPoint = 0.179,
       className,
       children,
+      RenderPanel,
+      RenderHue,
       ...props
     },
     ref,
   ) => {
     const picker = useCombinedRefs(React.useRef(), ref);
+
     const palette = React.useRef();
     const hue = React.useRef();
     const handleChange = React.useRef();
@@ -103,7 +106,6 @@ export const ColorPickerProvider = React.forwardRef(
       root.style.setProperty("--selected-color", c.rgb().join(" "));
 
       const el = palette.current;
-      console.log(palette);
       const elRect = el.getBoundingClientRect();
       root.style.setProperty(
         "--palette-marker-x",
@@ -118,14 +120,12 @@ export const ColorPickerProvider = React.forwardRef(
         ((h / 360) * elRect.height).toString(),
       );
       updateText();
-      console.log(root);
     }, [picker, updateText, defaultValue]);
 
     // MOUSE MOVES
     useMousemove(palette, (e) => {
       const el = palette.current;
       const root = picker.current;
-      // console.log(root);
       const elRect = el.getBoundingClientRect();
       let x = clamp(e.clientX - elRect.left, 0, elRect.width);
       let y = clamp(e.clientY - elRect.top, 0, elRect.height);
@@ -181,55 +181,28 @@ export const ColorPickerProvider = React.forwardRef(
     });
     return (
       <div
-        // aria-label="color-picker-provider"
+        aria-label="color-picker-provider"
         style={styleObj}
         className={cn("flex flex-col w-80  p-3 shadow-md gap-y-4", className)}
         ref={picker}
         {...props}
       >
-        {Children.map(children, (child) =>
-          cloneElement(
-            child,
-            child.type.displayName === "ColorPickerContent" &&
-              Children.count(child.props.children) === 2
-              ? { paletteRef: palette, hueRef: hue }
-              : null,
-          ),
-        )}
+        <div className="grid grid-cols-2 grid-rows-2">
+          <RenderPanel panelRef={palette} />
+          <RenderHue hueRef={hue} />
+        </div>
+        {children}
       </div>
     );
   },
 );
 ColorPickerProvider.displayName = "ColorPickerProvider";
 
-export const ColorPickerContent = React.forwardRef(
-  ({ className, children, paletteRef, hueRef, ...props }, ref) => {
-    return (
-      <div
-        aria-label="color-picker-content"
-        className={cn("flex flex-row  gap-4", className)}
-      >
-        {Children.map(children, (child) => {
-          return cloneElement(child, {
-            ref:
-              child.type.displayName === "ColorPickerPanel"
-                ? paletteRef
-                : child.type.displayName === "ColorPickerHue"
-                ? hueRef
-                : null,
-          });
-        })}
-      </div>
-    );
-  },
-);
-ColorPickerContent.displayName = "ColorPickerContent";
-
 export const ColorPickerPanel = React.forwardRef(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, panelRef, ...props }, ref) => {
     return (
       <div aria-label="panel" className={cn("grid h-48 gap-3", className)}>
-        {React.cloneElement(children, { ref })}
+        {React.cloneElement(children, { ref: panelRef })}
       </div>
     );
   },

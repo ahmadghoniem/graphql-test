@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   ColorPickerProvider,
   ColorPickerPalette,
@@ -5,7 +6,6 @@ import {
   ColorPickerPanel,
   ColorPickerMarker,
   ColorPickerHueSlider,
-  ColorPickerContent,
 } from "./ColorPicker";
 import { Card, CardContent, CardTitle } from "./card";
 
@@ -19,31 +19,40 @@ export const MyApp = () => {
   // const [value, setValue] = useState(null);
   // const [defaultColor, setDefaultColor] = useState("#24283B");
   // const [textColor, setTextColor] = useState(null);
-  // const myRef = useRef(null);
+  const myRef = useRef(null);
   // console.log(defaultColor);
   // setting the css variables on the makes t he colorpicker completely uncontrolled and as read-only
   // you can't set the color from elsewhere otherthan the palette itself
   return (
-    <Card>
+    <Card className="flex-col flex " ref={myRef}>
       <CardContent asChild>
-        {/**delegates all style of cardcontent to colorpicker plain provider while keepnig the logic inside of the provider intact */}
-        <ColorPickerProvider className="bg-[#24283B]" luminanceSetPoint={0.179}>
-          <CardTitle className=" bg-[rgb(var(--selected-color))] text-[rgb(var(--result-text-color))]/100 ">
-            Hello, World
-          </CardTitle>
-
-          <ColorPickerContent className="">
-            <ColorPickerPanel className="w-full">
+        {/**delegates all style of cardcontent to colorpickerContent provider while keeping the logic inside of the content intact */}
+        <ColorPickerProvider
+          RenderPanel={(props) => (
+            <ColorPickerPanel {...props} className="col-span-1 row-span-1">
               <ColorPickerPalette>
                 <ColorPickerMarker />
               </ColorPickerPalette>
             </ColorPickerPanel>
-            <ColorPickerHue className="w-9">
+          )}
+          RenderHue={({ hueRef }) => (
+            <ColorPickerHue
+              ref={hueRef}
+              className="row-span-1 col-span-1 max-w-[9rem]"
+            >
               <ColorPickerHueSlider />
             </ColorPickerHue>
-          </ColorPickerContent>
+          )}
+          className="bg-[#24283B] "
+          luminanceSetPoint={0.179}
+        >
+          <CardTitle className="row-span-1 max-h-max col-span-2 bg-[rgb(var(--selected-color))] text-[rgb(var(--result-text-color))]/100 ">
+            Hello, World
+          </CardTitle>
         </ColorPickerProvider>
       </CardContent>
     </Card>
   );
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
